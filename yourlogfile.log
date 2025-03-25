@@ -1,0 +1,8 @@
+Mar 25 12:34:56 host1 sshd[1234]: Accepted password for user1 from 192.168.1.10 port 54321 ssh2
+Mar 25 12:35:01 host1 cron[5678]: (root) CMD (run-parts /etc/cron.hourly)
+Mar 25 12:35:10 host1 kernel: [123456.789012] eth0: Link is Up - 1Gbps
+Mar 25 12:36:22 host2 nginx[1111]: 200 GET /index.html from 10.0.0.5
+invalid line that shouldn't match the pattern
+Mar 25 12:37:00 host1 sudo[2222]:   user2 : TTY=pts/0 ; PWD=/home/user2 ; USER=root ; COMMAND=/bin/ls
+Mar 25 12:37:00 host1 sudo[2222]: pam_unix(sudo:session): session opened for user root by user2(uid=0)
+Mar 25 12:37:00 host1 sudo[2222]: pam_unix(sudo:session): session closed for user root

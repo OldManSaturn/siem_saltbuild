@@ -22,6 +22,8 @@ pub fn parse_log(protocol: &str, source: &str, line: &str) -> ParsedLog {
     parsed.protocol = protocol.to_string();
     parsed.source = source.to_string();
     parsed
+    
+
 }
 
 // Internal syslog line parser
