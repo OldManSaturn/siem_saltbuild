@@ -1,5 +1,8 @@
+// App entry, init_db(), start syslog servers
+
 mod db;
 mod syslog_ingestion;
+mod log_parser;
 
 use db::init_db;
 use syslog_ingestion::start_syslog_server;

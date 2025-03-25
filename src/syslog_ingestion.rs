@@ -1,8 +1,10 @@
+// TCP/UDP syslog receivers, accepts DB pool, sends raw logs to parser
+
 use tokio::net::{TcpListener, UdpSocket};
 use tokio::io::AsyncReadExt;
 use sqlx::SqlitePool;
-use regex::Regex;
 use std::error::Error;
+use crate::log_parser::{parse_log, ParsedLog};
 
 pub async fn start_syslog_server(
     tcp_port: u16,
@@ -40,18 +42,18 @@ async fn start_tcp_syslog_server(
                         let message = String::from_utf8_lossy(&buffer[..n]).to_string();
                         println!("Received TCP log: {}", message);
 
-                        let parsed = parse_syslog_line(&message);
+                        let parsed = parse_log("TCP", "tcp connection", &message);
 
                         let _ = sqlx::query(
                             "INSERT INTO logs (protocol, source, message, parsed_timestamp, hostname, process)
                              VALUES (?, ?, ?, ?, ?, ?)"
                         )
-                        .bind("TCP")
-                        .bind("tcp connection")
+                        .bind(&parsed.protocol)
+                        .bind(&parsed.source)
                         .bind(&parsed.message)
-                        .bind(parsed.timestamp)
-                        .bind(parsed.hostname)
-                        .bind(parsed.process)
+                        .bind(&parsed.timestamp)
+                        .bind(&parsed.hostname)
+                        .bind(&parsed.process)
                         .execute(&pool)
                         .await;
                     }
@@ -79,56 +81,22 @@ async fn start_udp_syslog_server(
                 let message = String::from_utf8_lossy(&buffer[..n]).to_string();
                 println!("Received UDP log from {}: {}", src, message);
 
-                let parsed = parse_syslog_line(&message);
+                let parsed = parse_log("UDP", &src.to_string(), &message);
 
                 let _ = sqlx::query(
                     "INSERT INTO logs (protocol, source, message, parsed_timestamp, hostname, process)
                      VALUES (?, ?, ?, ?, ?, ?)"
                 )
-                .bind("UDP")
-                .bind(src.to_string())
+                .bind(&parsed.protocol)
+                .bind(&parsed.source)
                 .bind(&parsed.message)
-                .bind(parsed.timestamp)
-                .bind(parsed.hostname)
-                .bind(parsed.process)
+                .bind(&parsed.timestamp)
+                .bind(&parsed.hostname)
+                .bind(&parsed.process)
                 .execute(&db_pool)
                 .await;
             }
             Err(e) => eprintln!("UDP receive error: {}", e),
-        }
-    }
-}
-
-// ─────────────────────────────────────────
-// Basic syslog parser
-// ─────────────────────────────────────────
-
-#[derive(Debug)]
-struct ParsedLog {
-    timestamp: Option<String>,
-    hostname: Option<String>,
-    process: Option<String>,
-    message: String,
-}
-
-fn parse_syslog_line(line: &str) -> ParsedLog {
-    let re = Regex::new(
-        r"^(?P<timestamp>\w{3}\s+\d+\s+\d{2}:\d{2}:\d{2})\s+(?P<host>\S+)\s+(?P<proc>\S+?):\s*(?P<msg>.+)$"
-    ).unwrap();
-
-    if let Some(caps) = re.captures(line) {
-        ParsedLog {
-            timestamp: Some(caps["timestamp"].to_string()),
-            hostname: Some(caps["host"].to_string()),
-            process: Some(caps["proc"].to_string()),
-            message: caps["msg"].to_string(),
-        }
-    } else {
-        ParsedLog {
-            timestamp: None,
-            hostname: None,
-            process: None,
-            message: line.trim().to_string(),
         }
     }
 }

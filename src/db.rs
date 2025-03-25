@@ -1,3 +1,5 @@
+// init_db() and any future DB helpers
+
 use sqlx::SqlitePool;
 use std::error::Error;
 
