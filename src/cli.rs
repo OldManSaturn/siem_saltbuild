@@ -25,7 +25,14 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
                     .interact_text()?;
 
                 println!("Launching Syslog Server on port {}...", port);
-                start_syslog_server(port, port, db_pool.clone()).await?;
+
+                let db = db_pool.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = start_syslog_server(port, port, db).await {
+                        eprintln!("Syslog server exited with error: {}", e);
+                    }
+                });
+                    
             }
             1 => {
                 let path: String = Input::with_theme(&ColorfulTheme::default())
