@@ -33,6 +33,7 @@ You'll be greeted with a CLI
 ![Application Screenshot](assets/cli_home.png)
 
 From here, you can start the syslog listener servers (TCP & UDP) on a custom port or using the one defined within the config.toml file
+
 ![Application Screenshot](assets/start_syslog_ingestor.png)
 ## Contributing
 
