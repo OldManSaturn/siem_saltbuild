@@ -1,6 +1,8 @@
+// this module starts a simple syslog server that listens on TCP and UDP ports
+// it spawns separate threads to handle TCP and UDP connections, incoming log messages are printed to the console
 use std::net::{TcpListener, UdpSocket};
 use std::io::{Read, Write};
-use std::thread;
+use std::thread; // needed to run the tcp and udp servers in separate threads, concurrently
 
 pub mod log_ingestion {
     use super::*;
@@ -31,13 +33,19 @@ pub mod log_ingestion {
                 Ok(mut stream) => {
                     thread::spawn(move || {
                         let mut buffer = [0; 1024];
-                        match stream.read(&mut buffer) {
-                            Ok(size) => {
-                                let log_message = String::from_utf8_lossy(&buffer[..size]);
-                                println!("Received TCP log: {}", log_message);
-                                // Process the log message here
+                        loop {
+                            match stream.read(&mut buffer) {
+                                Ok(0) => break, // Connection closed
+                                Ok(size) => {
+                                    let log_message = String::from_utf8_lossy(&buffer[..size]);
+                                    println!("Received TCP log: {}", log_message);
+                                    // Process the log message here
+                                }
+                                Err(e) => {
+                                    eprintln!("Failed to read from TCP stream: {}", e);
+                                    break;
+                                }
                             }
-                            Err(e) => eprintln!("Failed to read from TCP stream: {}", e),
                         }
                     });
                 }
