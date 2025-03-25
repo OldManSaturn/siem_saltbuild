@@ -42,7 +42,7 @@ pub async fn launch_cli(db_pool: SqlitePool, config: AppConfig,) -> Result<(), B
                 println!("Launching Syslog Server on port {}...", port);
 
                 let db = db_pool.clone();
-                let mut shutdown_rx = shutdown_tx.subscribe();
+                let shutdown_rx = shutdown_tx.subscribe();
                 let task_id = format!("syslog:{}:{}", port, port);
 
                 let handle = tokio::spawn(async move {

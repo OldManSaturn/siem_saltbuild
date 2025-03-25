@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use sqlx::SqlitePool;
-use crate::log_parser::{parse_log, ParsedLog};
+use crate::log_parser::parse_log;
 
 pub async fn ingest_log_file(path: &str, db_pool: SqlitePool) -> Result<(), Box<dyn Error + Send + Sync>> {
     let file = File::open(path)?;

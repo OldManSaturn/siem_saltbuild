@@ -9,7 +9,7 @@ pub async fn start_syslog_server(
     tcp_port: u16,
     udp_port: u16,
     db_pool: SqlitePool,
-    mut shutdown: broadcast::Receiver<()>,
+    shutdown: broadcast::Receiver<()>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let tcp_addr = format!("0.0.0.0:{}", tcp_port);
     let udp_addr = format!("0.0.0.0:{}", udp_port);
