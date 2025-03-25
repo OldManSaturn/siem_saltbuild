@@ -28,6 +28,9 @@ cargo build
 cargo run
 ```
 
+You'll be greeted with a CLI
+
+![Application Screenshot](assets/cli_home.png)
 ## Contributing
 
 Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
