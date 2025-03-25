@@ -6,10 +6,11 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::task::JoinHandle;
 use tokio::sync::broadcast;
+use crate::config::AppConfig;
 
 type TaskMap = Arc<Mutex<HashMap<String, JoinHandle<()>>>>;
 
-pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn launch_cli(db_pool: SqlitePool, config: AppConfig,) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let tasks: TaskMap = Arc::new(Mutex::new(HashMap::new()));
     let (shutdown_tx, _) = broadcast::channel(16);
 
@@ -34,8 +35,9 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
             0 => {
                 let port: u16 = Input::with_theme(&ColorfulTheme::default())
                     .with_prompt("Enter port for TCP/UDP syslog")
-                    .default(514)
+                    .default(config.syslog_tcp_port)
                     .interact_text()?;
+
 
                 println!("Launching Syslog Server on port {}...", port);
 
@@ -56,8 +58,9 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
             1 => {
                 let path: String = Input::with_theme(&ColorfulTheme::default())
                     .with_prompt("Enter log file path")
-                    .default("yourlogfile.log".into())
+                    .default(config.log_file_path.clone())
                     .interact_text()?;
+
 
                 println!("Ingesting file: {}", path);
                 ingest_log_file(&path, db_pool.clone()).await?;

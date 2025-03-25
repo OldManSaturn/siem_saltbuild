@@ -1,0 +1,5 @@
+# config.toml
+
+syslog_tcp_port = 514
+syslog_udp_port = 514
+log_file_path = "yourlogfile.log"

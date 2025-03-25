@@ -3,15 +3,21 @@ mod syslog_ingestion;
 mod log_parser;
 mod file_based_ingestion;
 mod cli;
+mod config; 
 
 use db::init_db;
 use file_based_ingestion::ingest_log_file;
 use tokio::sync::broadcast;
+use config::AppConfig;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let settings = AppConfig::load()?;
+    println!("Loaded config: {:?}", settings);
     let db_pool = init_db().await?;
-    cli::launch_cli(db_pool).await?;
+    let config = AppConfig::load()?;
+    cli::launch_cli(db_pool, config).await?;
+
     Ok(())
 }
 
