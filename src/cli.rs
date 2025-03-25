@@ -16,6 +16,7 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
     let options = vec![
         "Start Syslog Server (custom port)",
         "Ingest From File (custom path)",
+        "View Logs",
         "List Running Services",
         "Stop All Services",
         "Exit",
@@ -62,8 +63,13 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
                 ingest_log_file(&path, db_pool.clone()).await?;
             }
 
-            // ── List Running Tasks ───────────────────────────────────
+            // ── View Logs ────────────────────────────────────────────
             2 => {
+                handle_log_query(&db_pool).await?;
+            }
+
+            // ── List Running Tasks ───────────────────────────────────
+            3 => {
                 let locked = tasks.lock().unwrap();
                 if locked.is_empty() {
                     println!("No active services.");
@@ -76,7 +82,7 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
             }
 
             // ── Stop All ─────────────────────────────────────────────
-            3 => {
+            4 => {
                 println!("Stopping all services...");
                 let _ = shutdown_tx.send(()); // broadcast shutdown
 
@@ -88,7 +94,7 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
             }
 
             // ── Exit ─────────────────────────────────────────────────
-            4 => {
+            5 => {
                 println!("Exiting.");
                 break;
             }
@@ -99,3 +105,37 @@ pub async fn launch_cli(db_pool: SqlitePool) -> Result<(), Box<dyn std::error::E
 
     Ok(())
 }
+
+// ── View Logs Helper ───────────────────────────────────────────────
+async fn handle_log_query(db_pool: &SqlitePool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let keyword: String = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Enter keyword to search (or leave empty for all)")
+        .allow_empty(true)
+        .interact_text()?;
+
+    let query = if keyword.trim().is_empty() {
+        "SELECT timestamp, protocol, source, message FROM logs ORDER BY id DESC LIMIT 20".to_string()
+    } else {
+        "SELECT timestamp, protocol, source, message FROM logs WHERE message LIKE ? ORDER BY id DESC LIMIT 20".to_string()
+    };
+
+    let rows = if keyword.trim().is_empty() {
+        sqlx::query_as::<_, (Option<String>, String, String, String)>(&query)
+            .fetch_all(db_pool)
+            .await?
+    } else {
+        sqlx::query_as::<_, (Option<String>, String, String, String)>(&query)
+            .bind(format!("%{}%", keyword))
+            .fetch_all(db_pool)
+            .await?
+    };
+
+    println!("\nRecent Logs:");
+    for (timestamp, protocol, source, message) in rows {
+        let ts = timestamp.unwrap_or_else(|| "Unknown".to_string());
+        println!("[{}] [{}] {} → {}", ts, protocol, source, message);
+    }
+
+    Ok(())
+}
+// ────────────────────────────────────────────────────────────────────
