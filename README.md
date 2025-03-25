@@ -1,7 +1,6 @@
-# Project Name
+# SALTBUILD - Custom SIEM
 
-A brief description of what this project does and who it's for.
-
+A custom built SIEM written in Rust. To serve as apart of the SALTBUILD suite of IT/Security software & tools.
 ## Table of Contents
 
 - [Installation](#installation)
@@ -25,7 +24,8 @@ Examples of how to use the project.
 
 ```bash
 # Example usage
-python main.py
+cargo build
+cargo run
 ```
 
 ## Contributing
