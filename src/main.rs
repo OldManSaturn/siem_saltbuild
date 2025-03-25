@@ -1,8 +1,8 @@
 mod db;
-mod log_ingestion;
+mod syslog_ingestion;
 
 use db::init_db;
-use log_ingestion::start_syslog_server;
+use syslog_ingestion::start_syslog_server;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
